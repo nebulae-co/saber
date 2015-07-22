@@ -1,5 +1,5 @@
 .Rproj.user
 .Rhistory
 .RData
-data-raw/*.zip
+data-raw/raw/*.zip
 data-raw/ftp_auth

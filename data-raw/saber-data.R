@@ -1,6 +1,5 @@
 library("dplyr")
 library("readr")
-library("RCurl")
 library("curl")
 
 # Get data:
@@ -8,34 +7,39 @@ library("curl")
 ftp_auth <- readLines(con = "data-raw/ftp_auth")
 server <- paste0("ftp://", ftp_auth, "@ftp.icfes.gov.co/SABER11/")
 
-server_files <- strsplit(getURL(server, dirlistonly = TRUE), "\n")[[1]] %>%
-  grep(pattern = ".zip", x = ., fixed = TRUE, value = TRUE)
+con <- curl(server, "r", new_handle(dirlistonly = TRUE))
 
-for (i in seq_along(server_files)){
-  file <- paste0(server, server_files[i])
-  dest <- paste0("data-raw/", server_files[i])
-  if(!file.exists(dest)) curl_download(url = file, destfile = dest)
+server_files <- grep(pattern = ".zip", x = readLines(con), fixed = TRUE,
+                     value = TRUE)
+
+close(con)
+
+files_urls <- paste0(server, server_files)
+
+dest_files <- paste0("data-raw/raw/", server_files)
+names(dest_files) <- gsub("-", "_", substr(server_files, 1, 10), fixed = TRUE)
+
+download_if_not_exists <- function(url, destfile){
+  if (!file.exists(destfile))
+      curl_download(url, destfile)
+  file.exists(destfile)
 }
 
+Map(download_if_not_exists, destfile = dest_files, url = files_urls)
 
-columns <- list(
-  PERS_FECHANACIMIENTO = col_date("%d/%m/%y"),
-  DISC_AUTISMO = col_character(),
-  DISC_SDOWN = col_character(),
-  DISC_INVIDENTE = col_character(),
-  DISC_CONDICION_ESPECIAL = col_character(),
-  DIS_MOTRIZ = col_character(),
-  DISC_SORDO = col_character(),
-  CODIGO_DANE = col_character()
-  )
+# Read data
+read_save <- function(file, ...){
+  df <- list(read_delim(file, ...))
+  names(df) <- names(file)
 
-saber <- read_delim(file = disk_file, del = "|", col_types = columns, n_max = 50)
+  save(list = names(df), file = file.path("data", paste0(names(df), ".rda")),
+       envir = as.environment(df), compress = "xz")
+}
 
-saber <- read_delim(file = file, del = "|", col_types = columns, n_max = 50)
+# Get pre-specified column types
+source("data-raw/column_types.R")
 
-#            proquote = '\"', escape_backslash = TRUE,
-#            escape_double = FALSE, na = "NA", col_names = TRUE,
-#            col_types = NULL, skip = 0, n_max = -1,
-#            progress = interactive())
-# unzip(zipfile = "data-raw/SB11-20142-RGSTRO-CLFCCN-V1-0.zip",
-#       exdir = "data-raw/")
+for (i in seq_along(dest_files)){
+  file <- dest_files[i]
+  read_save(file, del = "|", col_types = columns[[i]])
+}
