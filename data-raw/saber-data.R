@@ -20,12 +20,19 @@ download_if_not_exists <- function(url, destfile){
   file.exists(destfile)
 }
 
+dir.create(file.path("data-raw", "raw"))
+
 Map(download_if_not_exists, destfile = file.path("data-raw", "raw", files),
     url = paste0(server, files))
 
 # Read data
 
 ## Read or make file with column types
+
+dir.create(file.path("data-raw", "types"))
+
+col_date <- function(format = "%d/%m/%y"){readr::col_date(format)}
+
 get_types <- function(file, ...){
   types_file <- file.path("data-raw", "types", paste0(file_name(file), ".csv"))
 
