@@ -2,6 +2,10 @@ library("dplyr")
 library("readr")
 library("curl")
 
+make_dir_if_not_exists <- function(dir){
+  if (!dir.exists(dir)) dir.create(dir)
+}
+
 # Get data:
 
 ftp_auth <- readLines(con = file.path("data-raw", "ftp_auth"))
@@ -20,7 +24,7 @@ download_if_not_exists <- function(url, destfile){
   file.exists(destfile)
 }
 
-dir.create(file.path("data-raw", "raw"))
+devtools::use_data_raw()
 
 Map(download_if_not_exists, destfile = file.path("data-raw", "raw", files),
     url = paste0(server, files))
@@ -29,7 +33,7 @@ Map(download_if_not_exists, destfile = file.path("data-raw", "raw", files),
 
 ## Read or make file with column types
 
-dir.create(file.path("data-raw", "types"))
+make_dir_if_not_exists(file.path("data-raw", "types"))
 
 col_date <- function(format = "%d/%m/%y"){readr::col_date(format)}
 
