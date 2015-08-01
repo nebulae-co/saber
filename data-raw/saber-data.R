@@ -29,6 +29,8 @@ Map(download_if_not_exists, destfile = file.path("data-raw", "raw", files),
 get_types <- function(file, ...){
   types_file <- file.path("data-raw", "types", paste0(file_name(file), ".csv"))
 
+  # If there is no types file, make with defaults
+  # else read types file and parse types list for readr use.
   if (!file.exists(file.path(types_file))){
     df <- read_delim(file.path("data-raw", "raw", file), del = "|",
                      na = c("---", "-1", "", "            "), n_max = 100)
@@ -41,14 +43,15 @@ get_types <- function(file, ...){
     lapply(parse(text = types_df[["Tipo"]]), eval)
   } else {
     types_df <- read_csv(types_file)
-    lapply(parse(text = types_df[["Tipo"]]), eval)
+    setNames(lapply(parse(text = types_df[["Tipo"]]), eval),
+             types_df[["Variable"]])
   }
 }
 
 columns <- lapply(files, get_types)
 
 read_save <- function(file, ...){
-  df <- list(read_delim(file, ...))
+  df <- list(read_delim(file.path("data-raw", "raw", file), ...))
   names(df) <- file_name(file)
 
   save(list = names(df), file = file.path("data", paste0(names(df), ".rda")),
