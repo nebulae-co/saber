@@ -3,7 +3,7 @@ library("readr")
 library("curl")
 
 make_dir_if_not_exists <- function(dir){
-  if (!dir.exists(dir)) dir.create(dir)
+  dir.create(dir, showWarnings = FALSE)
 }
 
 # Get data:
@@ -65,9 +65,23 @@ read_save <- function(file, ...){
   df <- list(read_delim(file.path("data-raw", "raw", file), ...))
   names(df) <- file_name(file)
 
-  save(list = names(df), file = file.path("data", paste0(names(df), ".rda")),
-       envir = as.environment(df), compress = "xz")
+#  save(list = names(df), file = file.path("data", paste0(names(df), ".rda")),
+#       envir = as.environment(df), compress = "xz")
+
+  problems(df[[1]])
+
 }
 
-Map(read_save, file = files, del = "|", col_types = columns,
-    na = c("---", "-1", "", "            "))
+## Implementacion que funciono
+
+read_save <-function(file, ...){
+  unzip(file.path("data-raw", "raw", file), exdir = "temp") -> df_name
+  list(read.delim(df_name, header = TRUE, sep = "|", dec = ",", stringsAsFactors = FALSE)) -> df
+  names(df) <- file_name(file)
+  save(list = names(df), file = file.path("data", paste0(names(df), ".rda")),
+              envir = as.environment(df), compress = "xz")
+}
+
+
+all_problems <- Map(read_save, file = files)
+
