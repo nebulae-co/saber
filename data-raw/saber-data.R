@@ -35,8 +35,6 @@ Map(download_if_not_exists, destfile = file.path("data-raw", "raw", files),
 
 make_dir_if_not_exists(file.path("data-raw", "types"))
 
-col_date <- function(format = "%d/%m/%y"){readr::col_date(format)}
-
 get_types <- function(file, ...){
   types_file <- file.path("data-raw", "types", paste0(file_name(file), ".csv"))
 
@@ -62,12 +60,31 @@ get_types <- function(file, ...){
 columns <- lapply(files, get_types)
 
 read_save <- function(file, ...){
-  df <- list(read_delim(file.path("data-raw", "raw", file), ...))
+  nas <- c("---", "-1", "", "            ")
+
+  df <- list(read_delim(file.path("data-raw", "raw", file), del = "|",
+                        na = nas, ...))
+
   names(df) <- file_name(file)
 
   save(list = names(df), file = file.path("data", paste0(names(df), ".rda")),
-       envir = as.environment(df), compress = "xz")
+       envir = as.environment(df), compress = "bzip2")
 }
 
-Map(read_save, file = files, del = "|", col_types = columns,
-    na = c("---", "-1", "", "            "))
+
+## Get problems to edit types
+
+# get_problems <- function(file){
+#   nas <- c("---", "-1", "", "            ")
+#   columns <- get_types(file)
+#   df <- read_delim(file.path("data-raw", "raw", file), del = "|",
+#                    col_types = columns, na = nas)
+#   problems(df)
+# }
+
+# probs <- lapply(files, get_problems)
+
+## Test
+# read_save(file = files[1], col_types = columns[[1]])
+
+Map(read_save, file = files, col_types = columns)
