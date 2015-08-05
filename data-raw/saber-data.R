@@ -87,4 +87,6 @@ read_save <- function(file, ...){
 ## Test
 # read_save(file = files[1], col_types = columns[[1]])
 
+make_dir_if_not_exists(file.path("data"))
+
 Map(read_save, file = files, col_types = columns)
