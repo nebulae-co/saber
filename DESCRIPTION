@@ -1,7 +1,7 @@
 Package: saber
 Type: Package
 Title: Saber data.
-Version: 0.0.0.9000
+Version: 0.0.0.9500
 Date: 2015-07-05
 Authors@R: c(
     person("Daniel", "Moreno", email = "damorenoco@unal.edu.co",
@@ -12,7 +12,11 @@ Authors@R: c(
           role = c("aut"))
     )
 Maintainer: Daniel Moreno <damorenoco@unal.edu.co>
-Description: Saber are standardized education tests run by the Instituto
-             Colombiano para el Fomento de la Educación Superior (ICFES).
+Description: The saber package provides Saber data. Saber are standardized
+    education tests run by the Colombian Institute for Educational Evaluation
+    (ICFES).
 License: CC0
-LazyData: TRUE
+LazyData: FALSE
+Sugests:
+  dplyr
+Encoding: UTF-8
